@@ -65,6 +65,7 @@ const Row1 = (props: Props) => {
 
   return (
     <>
+      {/* GridArea A  */}
       <DashboardBox gridArea="a">
         <BoxHeader
           title={"Revenue and Expenses"}
@@ -142,6 +143,7 @@ const Row1 = (props: Props) => {
           </AreaChart>
         </ResponsiveContainer>
       </DashboardBox>
+      {/* GridArea B  */}
       <DashboardBox gridArea="b">
         <BoxHeader
           title={"Profit and Revenue"}
@@ -196,6 +198,7 @@ const Row1 = (props: Props) => {
           </LineChart>
         </ResponsiveContainer>
       </DashboardBox>
+      {/* GridArea C  */}
       <DashboardBox gridArea="c">
         <BoxHeader
           title="Revenue Month by Month"
