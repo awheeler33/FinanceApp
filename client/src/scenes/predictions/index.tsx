@@ -1,8 +1,8 @@
 import DashboardBox from "@/components/DashboardBox";
 import FlexBetween from "@/components/FlexBetween";
 import { useGetKpisQuery } from "@/state/api";
-import { Box, Button, Tooltip, Typography, useTheme } from "@mui/material";
-import React, { useState } from "react";
+import { Box, Button, Typography, useTheme } from "@mui/material";
+import React, { useMemo, useState } from "react";
 import {
   CartesianGrid,
   Label,
@@ -12,14 +12,35 @@ import {
   ResponsiveContainer,
   XAxis,
   YAxis,
+  Tooltip,
 } from "recharts";
+import regression, { DataPoint } from "regression";
 
-type Props = {};
-
-const Predictions = (props: Props) => {
+const Predictions = () => {
   const { palette } = useTheme();
   const [isPredictions, setIsPredictions] = useState(false);
   const { data: kpiData } = useGetKpisQuery();
+
+  const formattedData = useMemo(() => {
+    if (!kpiData) return [];
+    const monthData = kpiData[0].monthlyData;
+
+    const formatted: Array<DataPoint> = monthData.map(
+      ({ revenue }, i: number) => {
+        return [i, revenue];
+      }
+    );
+    const regressionLine = regression.linear(formatted);
+
+    return monthData.map(({ month, revenue }, i: number) => {
+      return {
+        name: month,
+        "Actual Revenue": revenue,
+        "Regression Line": regressionLine.points[i][1],
+        "Predicted Revenue": regressionLine.predict(i + 12)[1],
+      };
+    });
+  }, [kpiData]);
 
   return (
     <DashboardBox width="100%" height="100%" p="1rem" overflow="hidden">
@@ -35,7 +56,7 @@ const Predictions = (props: Props) => {
           sx={{
             color: palette.grey[900],
             backgroundColor: palette.grey[700],
-            boxshadow: "0.1rem 0.1rem 0.1rem 0.1rem rgba(0,0,0,0.4)",
+            boxShadow: "0.1rem 0.1rem 0.1rem 0.1rem rgba(0,0,0,0.4)",
           }}
           onClick={() => setIsPredictions(!isPredictions)}
         >
@@ -72,17 +93,25 @@ const Predictions = (props: Props) => {
           <Tooltip />
           <Legend verticalAlign="top" />
           <Line
-            yAxisId={"left"}
             type="monotone"
-            dataKey="profit"
-            stroke={palette.tertiary[500]}
+            dataKey="Actual Revenue"
+            stroke={palette.primary.main}
+            strokeWidth={0}
+            dot={{ strokeWidth: 5 }}
           />
           <Line
-            yAxisId={"right"}
             type="monotone"
-            dataKey="revenue"
-            stroke={palette.primary.main}
+            dataKey="Regression Line"
+            stroke="#8884d8"
+            dot={false}
           />
+          {isPredictions && (
+            <Line
+              strokeDasharray="5 5"
+              dataKey="Predicted Revenue"
+              stroke={palette.secondary[500]}
+            />
+          )}
         </LineChart>
       </ResponsiveContainer>
     </DashboardBox>
